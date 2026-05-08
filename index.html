@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A-XLE · UI Architecture Decision Assessment</title>
+  <style>
+    :root {
+      --navy:       #1a2e5a;
+      --navy-light: #233d7a;
+      --blue:       #2563eb;
+      --blue-pale:  #eff6ff;
+      --bg:         #f1f5f9;
+      --card:       #ffffff;
+      --text:       #0f172a;
+      --muted:      #64748b;
+      --border:     #e2e8f0;
+      --red:        #ef4444;
+      --green:      #10b981;
+      --amber:      #f59e0b;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1.25rem 3rem;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: var(--navy);
+      color: #fff;
+      border-radius: 12px;
+      padding: 2.25rem 2.5rem;
+      margin-bottom: 1.25rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::after {
+      content: '';
+      position: absolute;
+      right: -60px;
+      top: -60px;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+      pointer-events: none;
+    }
+    .header .eyebrow {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 0.6rem;
+    }
+    .header h1 {
+      font-size: 1.65rem;
+      font-weight: 700;
+      line-height: 1.25;
+      margin-bottom: 0.65rem;
+    }
+    .header p {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.72);
+      max-width: 580px;
+    }
+
+    /* ── Intro card ── */
+    .intro {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem 1.75rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+    .intro strong { color: var(--text); }
+
+    /* ── Progress bar ── */
+    .progress-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .progress-track {
+      flex: 1;
+      height: 5px;
+      background: var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--navy);
+      border-radius: 10px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+    .progress-label { white-space: nowrap; }
+
+    /* ── Question card ── */
+    .question-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 1rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .question-card.answered {
+      border-left-color: var(--navy);
+    }
+    .question-card.error {
+      border-left-color: var(--red);
+    }
+
+    .question-header {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      margin-bottom: 1.25rem;
+    }
+    .q-number {
+      background: var(--navy);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      border-radius: 20px;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    .question-card.answered .q-number { background: var(--navy); }
+    .question-card.error .q-number    { background: var(--red); }
+
+    .q-text {
+      font-size: 0.935rem;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    /* ── Likert scale ── */
+    .likert {
+      display: flex;
+      gap: 0.4rem;
+    }
+    .likert-opt {
+      flex: 1;
+      position: relative;
+    }
+    .likert-opt input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .likert-opt label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 0.65rem 0.3rem 0.6rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      font-size: 0.69rem;
+      line-height: 1.3;
+      color: var(--muted);
+      transition: all 0.15s;
+      min-height: 68px;
+      gap: 0.5rem;
+      user-select: none;
+    }
+    .likert-opt label:hover {
+      border-color: var(--blue);
+      background: var(--blue-pale);
+      color: var(--blue);
+    }
+    .likert-opt input[type="radio"]:checked + label {
+      border-color: var(--navy);
+      background: var(--navy);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* dot indicator inside label */
+    .likert-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      border: 2px solid currentColor;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .likert-opt input[type="radio"]:checked + label .likert-dot {
+      background: rgba(255,255,255,0.7);
+      border-color: rgba(255,255,255,0.7);
+    }
+
+    /* ── CTA ── */
+    .cta-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 2rem 0 0.5rem;
+    }
+    .evaluate-btn {
+      background: var(--navy);
+      color: #fff;
+      border: none;
+      padding: 0.9rem 2.75rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+      transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+      box-shadow: 0 2px 8px rgba(26,46,90,0.18);
+    }
+    .evaluate-btn:hover {
+      background: var(--navy-light);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(26,46,90,0.25);
+    }
+    .evaluate-btn:active { transform: translateY(0); }
+    .error-msg {
+      color: var(--red);
+      font-size: 0.82rem;
+      display: none;
+    }
+
+    /* ── Result ── */
+    #result {
+      display: none;
+      margin-top: 2rem;
+    }
+
+    .result-header {
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin-bottom: 0.4rem;
+    }
+    .result-header h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .result-subtitle {
+      font-size: 0.83rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+
+    /* bars */
+    .path-bars { margin-bottom: 1.75rem; }
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      margin-bottom: 0.75rem;
+    }
+    .bar-path-name {
+      width: 68px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--muted);
+      flex-shrink: 0;
+      text-align: right;
+    }
+    .bar-path-name.winner { color: var(--navy); }
+    .bar-track {
+      flex: 1;
+      background: var(--bg);
+      border-radius: 6px;
+      height: 30px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      background: var(--border);
+      transition: width 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+      display: flex;
+      align-items: center;
+      padding-left: 10px;
+      width: 0%;
+    }
+    .bar-fill.winner { background: var(--navy); }
+    .bar-fill-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .bar-fill.winner .bar-fill-label { color: #fff; }
+    .bar-pct {
+      width: 42px;
+      text-align: right;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+    .bar-pct.winner { color: var(--navy); }
+
+    /* winner card */
+    .winner-card {
+      background: linear-gradient(135deg, #1a2e5a 0%, #243f80 100%);
+      color: #fff;
+      border-radius: 12px;
+      padding: 2rem 2.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .winner-card .tag {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 0.5rem;
+    }
+    .winner-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.22rem 0.8rem;
+      border-radius: 20px;
+      margin-bottom: 1rem;
+    }
+    .winner-card h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      line-height: 1.3;
+    }
+    .winner-card p {
+      font-size: 0.88rem;
+      color: rgba(255,255,255,0.8);
+      line-height: 1.7;
+      margin-bottom: 1.25rem;
+    }
+    .winner-implications {
+      border-top: 1px solid rgba(255,255,255,0.15);
+      padding-top: 1rem;
+      font-size: 0.83rem;
+      color: rgba(255,255,255,0.62);
+      line-height: 1.65;
+    }
+    .winner-implications strong { color: rgba(255,255,255,0.9); }
+
+    /* inconclusive */
+    .inconclusive-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.75rem 2rem;
+      text-align: center;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+    .inconclusive-card h3 { font-size: 1.1rem; color: var(--text); margin-bottom: 0.5rem; }
+    .inconclusive-card p { font-size: 0.87rem; }
+
+    /* reset */
+    .reset-btn {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 0.5rem 1.25rem;
+      font-size: 0.82rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .reset-btn:hover { background: var(--bg); color: var(--text); }
+
+    /* browse bar */
+    .browse-bar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .browse-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .browse-select {
+      flex: 1;
+      min-width: 180px;
+      padding: 0.48rem 0.75rem;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      font-size: 0.85rem;
+      color: var(--text);
+      background: var(--bg);
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .browse-select:focus { border-color: var(--navy); }
+    .browse-hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* export */
+    .export-btn {
+      background: transparent;
+      color: var(--navy);
+      border: 1.5px solid var(--navy);
+      padding: 0.5rem 1.25rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .export-btn:hover { background: var(--navy); color: #fff; }
+    .export-btn svg { flex-shrink: 0; }
+
+    /* modal overlay */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.45);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 2rem 2.25rem;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(15,23,42,0.25);
+    }
+    .modal-box h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 0.4rem;
+    }
+    .modal-box p {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 1.25rem;
+    }
+    .modal-input {
+      width: 100%;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      font-size: 0.9rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+      margin-bottom: 0.5rem;
+      font-family: inherit;
+    }
+    .modal-input:focus { border-color: var(--navy); }
+    .modal-input-err {
+      font-size: 0.75rem;
+      color: var(--red);
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 0.6rem;
+      justify-content: flex-end;
+      margin-top: 1rem;
+    }
+    .modal-cancel {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 0.5rem 1.1rem;
+      font-size: 0.82rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .modal-cancel:hover { background: var(--bg); color: var(--text); }
+    .modal-confirm {
+      background: var(--navy);
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1.35rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+    .modal-confirm:hover { background: var(--navy-light); }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 2.5rem;
+    }
+
+    /* ── Responsive tweaks ── */
+    @media (max-width: 600px) {
+      .header { padding: 1.5rem 1.25rem; }
+      .header h1 { font-size: 1.3rem; }
+      .question-card { padding: 1.25rem 1rem; }
+      .likert-opt label { font-size: 0.62rem; min-height: 62px; padding: 0.5rem 0.2rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header class="header">
+    <div class="eyebrow">A-XLE Platform &nbsp;·&nbsp; Internal Decision Support</div>
+    <h1>UI Architecture Decision Assessment</h1>
+    <p>Answer the ten statements below based on your priorities and outlook. There are no right or wrong answers. Click <strong style="color:rgba(255,255,255,0.9)">Evaluate</strong> when done to receive your recommended direction.</p>
+  </header>
+
+  <div class="intro">
+    <strong>Context:</strong> Four strategic paths have been identified for the portal's frontend — ranging from preserving the current technology to a full rebuild. This tool maps your strategic priorities to the path most aligned with your thinking. Results are determined by your responses only and are meant to support, not replace, team discussion.
+  </div>
+
+  <div class="browse-bar">
+    <span class="browse-label">Browse other answers:</span>
+    <select class="browse-select" id="browse-select" onchange="loadSavedResponse(this.value)">
+      <option value="">— select a respondent —</option>
+    </select>
+    <span class="browse-hint">Loads their answers and shows their result</span>
+  </div>
+
+  <div class="progress-bar-wrap">
+    <span class="progress-label" id="progress-label">0 of 10 answered</span>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
+
+  <div id="questions-container"></div>
+
+  <div class="cta-section">
+    <button class="evaluate-btn" onclick="runEvaluation()">Evaluate My Responses</button>
+    <div class="error-msg" id="error-msg">Please respond to all statements before evaluating.</div>
+  </div>
+
+  <div id="result"></div>
+
+  <!-- Export name modal -->
+  <div class="modal-overlay" id="export-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-box">
+      <h3 id="modal-title">Export your answers</h3>
+      <p>Your answers will be saved as a JSON file so others can load and compare them. Please enter your name as it should appear in the export.</p>
+      <input class="modal-input" id="export-name-input" type="text" placeholder="Your name" autocomplete="name"
+             onkeydown="if(event.key==='Enter')confirmExport();if(event.key==='Escape')closeExportModal()" />
+      <div class="modal-input-err" id="export-name-err">Please enter your name before exporting.</div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeExportModal()">Cancel</button>
+        <button class="modal-confirm" onclick="confirmExport()">Download JSON</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>A-XLE Platform &nbsp;·&nbsp; UI Architecture Decision Support Tool &nbsp;·&nbsp; Confidential &nbsp;·&nbsp; 2026</footer>
+
+</div>
+
+<script>
+  /* ─────────────────────────────────────────────
+     DATA
+  ───────────────────────────────────────────── */
+
+  const SCALE = [
+    { value: -2, label: "Strongly\nDisagree" },
+    { value: -1, label: "Somewhat\nDisagree" },
+    { value:  0, label: "Neutral" },
+    { value:  1, label: "Somewhat\nAgree" },
+    { value:  2, label: "Strongly\nAgree"  },
+  ];
+
+  /*
+    Weight matrix: each question value (−2…+2) is multiplied by the path
+    weight and accumulated into that path's total score.
+
+    Positive weight  → agreeing with the statement pushes toward this path.
+    Negative weight  → agreeing pushes AWAY from this path.
+
+    Paths:
+      A – Stay Full MudBlazor (status quo)
+      B – Hybrid: Gradual Transition (MudBlazor legacy + Tailwind/DOM new)
+      C – Full Blazor + Tailwind (drop MudBlazor)
+      D – React + ASP.NET Core API migration
+  */
+  const QUESTIONS = [
+    {
+      id: 1,
+      text: "Offering a visually modern, distinctly branded experience to each customer is a key part of our commercial growth strategy.",
+      weights: { A: -2, B: 1, C: 2, D: 1 }
+    },
+    {
+      id: 2,
+      text: "Preserving operational stability and avoiding disruption to the existing platform matters more to us right now than pursuing a redesigned look and feel.",
+      weights: { A: 2, B: 1, C: -1, D: -2 }
+    },
+    {
+      id: 3,
+      text: "We are prepared to allocate 6 to 18 months of focused development investment to significantly elevate the portal's visual quality and user experience.",
+      weights: { A: -2, B: 1, C: 2, D: 1 }
+    },
+    {
+      id: 4,
+      text: "The visual quality and usability of our portal has a direct impact on our ability to win new business and retain existing clients.",
+      weights: { A: -2, B: 1, C: 2, D: 1 }
+    },
+    {
+      id: 5,
+      text: "A phased approach — where new features get a modern look while existing screens remain stable — is the right balance of progress and risk for us.",
+      weights: { A: -1, B: 2, C: 1, D: -2 }
+    },
+    {
+      id: 6,
+      text: "We would be willing to accept added complexity in how our systems connect internally, in exchange for a portal technology that has the largest global developer community, the fastest-evolving design tooling, and the broadest hiring market — even if it means our business logic and customer interface would no longer live in the same unified environment.",
+      weights: { A: -2, B: -1, C: 1, D: 3 }
+    },
+    {
+      id: 7,
+      text: "Keeping long-term maintenance and operational costs low is a higher priority than unlocking greater design flexibility.",
+      weights: { A: 2, B: 1, C: -1, D: -2 }
+    },
+    {
+      id: 8,
+      text: "Within the next two to three years, the portal's appearance and user experience will become a clear competitive differentiator in the market.",
+      weights: { A: -2, B: 1, C: 2, D: 1 }
+    },
+    {
+      id: 9,
+      text: "We have the appetite and budget to consider a more comprehensive overhaul of the portal's technical foundation — not just a surface-level visual refresh.",
+      weights: { A: -2, B: -1, C: 1, D: 3 }
+    },
+    {
+      id: 10,
+      text: "I prefer that we continue with a proven, stable technology already embedded in the platform — even if it places some limits on our design choices.",
+      weights: { A: 2, B: 1, C: -1, D: -2 }
+    }
+  ];
+
+  const PATHS = {
+    A: {
+      short:       "Path A",
+      barLabel:    "Stay Full MudBlazor",
+      name:        "Path A — Stay Full MudBlazor",
+      description: "Maintain the current technology stack as-is. All new screens continue to follow MudBlazor patterns. The platform remains consistent, stable, and low-cost to maintain — at the expense of design freedom and customer-facing visual quality.",
+      implication: "Best suited for teams prioritising operational continuity and minimal short-term investment. UI flexibility and the ability to match custom design mockups remain constrained under this path.",
+      caution:     "Note: customer demo signals and AI-assisted development trends both weaken the long-term case for this path."
+    },
+    B: {
+      short:       "Path B",
+      barLabel:    "Hybrid — Gradual Transition",
+      name:        "Path B — Hybrid: Gradual Transition",
+      description: "New features and modules are built with a modern, flexible approach (Blazor + Tailwind CSS), while existing screens remain unchanged until there is a clear business reason to revisit them. This is the pragmatic, lowest-risk path to improving design quality.",
+      implication: "Recommended starting point by the technical assessment. Captures the design quality upside for all new work immediately, with no disruption to working modules. The dual appearance is a short-term reality that resolves naturally over 12–18 months.",
+      caution:     ""
+    },
+    C: {
+      short:       "Path C",
+      barLabel:    "Full Blazor Rebuild",
+      name:        "Path C — Full Blazor Rebuild (no MudBlazor)",
+      description: "Commit to a planned, phased removal of the MudBlazor component framework over 12–18 months. All modules eventually converge onto a single, modern design system built directly on Blazor, governed by a utility-first CSS framework (Tailwind or equivalent) that provides centralised control over theming, dark mode, and responsive behaviour — with no third-party component constraints.",
+      implication: "High design ceiling and clean long-term architecture. Requires sustained investment and internal discipline, but permanently removes framework constraints and converges to a single, maintainable system. Identified as the natural end-state of Path B.",
+      caution:     ""
+    },
+    D: {
+      short:       "Path D",
+      barLabel:    "React Migration",
+      name:        "Path D — React + ASP.NET Core API Migration",
+      description: "Decouple the frontend entirely by rebuilding it in React, exposing backend logic through a REST/OpenAPI layer. Maximum design freedom, access to the broadest UI ecosystem, and the highest industry modernity rating — at the cost of running two technology stacks and two codebases.",
+      implication: "Suitable only if UI becomes the primary product differentiator and the team expands to include dedicated frontend (TypeScript/React) expertise. Highest migration cost of any path; the team and budget burden is substantial.",
+      caution:     "Caution: this path requires maintaining parallel TypeScript and C# models and introduces significant organisational overhead for a small team."
+    }
+  };
+
+  /* ─────────────────────────────────────────────
+     RENDER QUESTIONS
+  ───────────────────────────────────────────── */
+
+  const container = document.getElementById('questions-container');
+  let answeredCount = 0;
+
+  QUESTIONS.forEach(q => {
+    const card = document.createElement('div');
+    card.className = 'question-card';
+    card.id = `qcard-${q.id}`;
+
+    const optionsHtml = SCALE.map((opt, i) => {
+      const lines = opt.label.split('\n');
+      const labelHtml = lines.length > 1
+        ? `${lines[0]}<br>${lines[1]}`
+        : opt.label;
+      return `
+        <div class="likert-opt">
+          <input type="radio" name="q${q.id}" id="q${q.id}o${i}" value="${opt.value}"
+                 onchange="onAnswer(${q.id})">
+          <label for="q${q.id}o${i}">
+            <span class="likert-dot"></span>
+            ${labelHtml}
+          </label>
+        </div>`;
+    }).join('');
+
+    card.innerHTML = `
+      <div class="question-header">
+        <span class="q-number">${String(q.id).padStart(2,'0')}</span>
+        <span class="q-text">${q.text}</span>
+      </div>
+      <div class="likert">${optionsHtml}</div>
+    `;
+
+    container.appendChild(card);
+  });
+
+  /* ─────────────────────────────────────────────
+     PROGRESS
+  ───────────────────────────────────────────── */
+
+  function updateProgress() {
+    answeredCount = QUESTIONS.filter(q =>
+      document.querySelector(`input[name="q${q.id}"]:checked`)
+    ).length;
+    const pct = Math.round((answeredCount / QUESTIONS.length) * 100);
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-label').textContent =
+      `${answeredCount} of ${QUESTIONS.length} answered`;
+  }
+
+  function onAnswer(qId) {
+    const card = document.getElementById(`qcard-${qId}`);
+    card.classList.remove('error');
+    card.classList.add('answered');
+    updateProgress();
+  }
+
+  /* ─────────────────────────────────────────────
+     EVALUATE
+  ───────────────────────────────────────────── */
+
+  function runEvaluation() {
+    // Validate
+    let hasError = false;
+    QUESTIONS.forEach(q => {
+      const card = document.getElementById(`qcard-${q.id}`);
+      const checked = document.querySelector(`input[name="q${q.id}"]:checked`);
+      if (!checked) {
+        card.classList.add('error');
+        card.classList.remove('answered');
+        hasError = true;
+      }
+    });
+
+    const errorEl = document.getElementById('error-msg');
+    if (hasError) {
+      errorEl.style.display = 'block';
+      const first = document.querySelector('.question-card.error');
+      if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    errorEl.style.display = 'none';
+
+    // Calculate raw scores
+    const scores = { A: 0, B: 0, C: 0, D: 0 };
+    QUESTIONS.forEach(q => {
+      const val = parseInt(
+        document.querySelector(`input[name="q${q.id}"]:checked`).value
+      );
+      Object.keys(q.weights).forEach(p => {
+        scores[p] += val * q.weights[p];
+      });
+    });
+
+    // Normalise to 15–100 so all bars are visible
+    const rawVals  = Object.values(scores);
+    const rawMin   = Math.min(...rawVals);
+    const rawMax   = Math.max(...rawVals);
+    const rawRange = rawMax - rawMin || 1;
+
+    const normalised = {};
+    Object.keys(scores).forEach(p => {
+      normalised[p] = Math.round(15 + ((scores[p] - rawMin) / rawRange) * 85);
+    });
+
+    // Determine winner (preference order on exact tie: B > C > D > A)
+    const preferenceOrder = ['B', 'C', 'D', 'A'];
+    let winner = preferenceOrder[0];
+    preferenceOrder.forEach(p => {
+      if (scores[p] > scores[winner]) winner = p;
+    });
+
+    // Detect inconclusive (all within ±5 raw points of each other)
+    const isInconclusive = (rawMax - rawMin) < 5;
+
+    renderResult(scores, normalised, winner, isInconclusive);
+  }
+
+  /* ─────────────────────────────────────────────
+     RENDER RESULT
+  ───────────────────────────────────────────── */
+
+  function renderResult(scores, normalised, winner, inconclusive) {
+    const resultEl = document.getElementById('result');
+    resultEl.style.display = 'block';
+
+    // Sort paths by score descending for display
+    const sortedPaths = Object.keys(PATHS).sort((a, b) => scores[b] - scores[a]);
+
+    const barsHtml = sortedPaths.map(p => {
+      const isWinner = p === winner;
+      return `
+        <div class="bar-row">
+          <div class="bar-path-name ${isWinner ? 'winner' : ''}">${PATHS[p].short}</div>
+          <div class="bar-track">
+            <div class="bar-fill ${isWinner ? 'winner' : ''}"
+                 id="bar-${p}" style="width:0%"
+                 data-target="${normalised[p]}%">
+              <span class="bar-fill-label">${PATHS[p].barLabel}</span>
+            </div>
+          </div>
+          <div class="bar-pct ${isWinner ? 'winner' : ''}">${normalised[p]}%</div>
+        </div>`;
+    }).join('');
+
+    let outcomeHtml;
+    if (inconclusive) {
+      outcomeHtml = `
+        <div class="inconclusive-card">
+          <h3>Results are inconclusive</h3>
+          <p>Your responses are evenly distributed across all four directions, which suggests either strong neutrality or significant internal tension between priorities. Consider reviewing each statement again with more decisive answers, or use the results as a starting point for team discussion.</p>
+        </div>`;
+    } else {
+      const path = PATHS[winner];
+      const cautionHtml = path.caution
+        ? `<div style="margin-top:0.85rem;padding-top:0.85rem;border-top:1px solid rgba(255,255,255,0.12);font-size:0.8rem;color:rgba(255,255,255,0.5);font-style:italic;">${path.caution}</div>`
+        : '';
+      outcomeHtml = `
+        <div class="winner-card">
+          <div class="tag">Recommended Direction</div>
+          <div class="winner-badge">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="5" cy="5" r="4.5" fill="rgba(255,255,255,0.3)"/>
+              <path d="M3 5.2l1.3 1.3L7 3.5" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Alignment: ${normalised[winner]}%
+          </div>
+          <h3>${path.name}</h3>
+          <p>${path.description}</p>
+          <div class="winner-implications">
+            <strong>Strategic implication:</strong> ${path.implication}
+          </div>
+          ${cautionHtml}
+        </div>`;
+    }
+
+    resultEl.innerHTML = `
+      <div class="result-header">
+        <h2>Assessment Result</h2>
+      </div>
+      <p class="result-subtitle">Alignment of each path with your stated priorities, ranked by fit.</p>
+      <div class="path-bars">${barsHtml}</div>
+      ${outcomeHtml}
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center;margin-top:0.5rem;">
+        <button class="reset-btn" onclick="resetForm()">&#8635;&nbsp; Reset &amp; Start Over</button>
+        <button class="export-btn" id="export-btn" onclick="openExportModal()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7 1v7M4 6l3 3 3-3M2 10v1.5A.5.5 0 002.5 12h9a.5.5 0 00.5-.5V10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Export Answers to JSON
+        </button>
+      </div>
+    `;
+
+    // Animate bars after paint
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.querySelectorAll('.bar-fill').forEach(bar => {
+          bar.style.width = bar.dataset.target;
+        });
+      });
+    });
+
+    resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Reset browse dropdown so it doesn't suggest a stale loaded name
+    document.getElementById('browse-select').value = '';
+  }
+
+  /* ─────────────────────────────────────────────
+     RESET
+  ───────────────────────────────────────────── */
+
+  function resetForm() {
+    QUESTIONS.forEach(q => {
+      document.querySelectorAll(`input[name="q${q.id}"]`)
+        .forEach(i => i.checked = false);
+      const card = document.getElementById(`qcard-${q.id}`);
+      card.classList.remove('answered', 'error');
+    });
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('error-msg').style.display = 'none';
+    document.getElementById('browse-select').value = '';
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Init progress
+  updateProgress();
+
+  /* ─────────────────────────────────────────────
+     SAVED RESPONSES (browse other answers)
+  ───────────────────────────────────────────── */
+
+  const SAVED_RESPONSES = [
+    {
+      "respondent": "Peter",
+      "exportedAt": "2026-05-08T07:50:20.155Z",
+      "answers": { "q1": 1, "q2": 0, "q3": 2, "q4": 1, "q5": 2, "q6": -1, "q7": 0, "q8": 1, "q9": -1, "q10": 0 }
+    }
+  ];
+
+  // Populate dropdown
+  (function seedDropdown() {
+    const sel = document.getElementById('browse-select');
+    SAVED_RESPONSES.forEach((r, i) => {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = r.respondent;
+      sel.appendChild(opt);
+    });
+  })();
+
+  function loadSavedResponse(idx) {
+    if (idx === '') return;
+    const r = SAVED_RESPONSES[parseInt(idx)];
+    if (!r) return;
+
+    // Apply answers
+    QUESTIONS.forEach(q => {
+      const val = r.answers[`q${q.id}`];
+      if (val === null || val === undefined) return;
+      const radio = document.querySelector(
+        `input[name="q${q.id}"][value="${val}"]`
+      );
+      if (radio) {
+        radio.checked = true;
+        onAnswer(q.id);
+      }
+    });
+
+    // Scroll to top of questions then evaluate
+    document.getElementById('questions-container')
+      .scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(() => runEvaluation(), 400);
+  }
+
+  /* ─────────────────────────────────────────────
+     EXPORT
+  ───────────────────────────────────────────── */
+
+  function openExportModal() {
+    document.getElementById('export-name-input').value = '';
+    document.getElementById('export-name-err').style.display = 'none';
+    document.getElementById('export-modal').classList.add('open');
+    setTimeout(() => document.getElementById('export-name-input').focus(), 60);
+  }
+
+  function closeExportModal() {
+    document.getElementById('export-modal').classList.remove('open');
+  }
+
+  // Close on backdrop click
+  document.getElementById('export-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeExportModal();
+  });
+
+  function confirmExport() {
+    const nameInput = document.getElementById('export-name-input');
+    const nameErr   = document.getElementById('export-name-err');
+    const name      = nameInput.value.trim();
+
+    if (!name) {
+      nameErr.style.display = 'block';
+      nameInput.focus();
+      return;
+    }
+    nameErr.style.display = 'none';
+
+    // Collect answers (null if unanswered)
+    const answers = {};
+    QUESTIONS.forEach(q => {
+      const checked = document.querySelector(`input[name="q${q.id}"]:checked`);
+      answers[`q${q.id}`] = checked ? parseInt(checked.value) : null;
+    });
+
+    const payload = {
+      respondent: name,
+      exportedAt: new Date().toISOString(),
+      answers
+    };
+
+    const slug     = name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+    const filename = `axle_architecture_survey_${slug}_export.json`;
+    const blob     = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url      = URL.createObjectURL(blob);
+    const a        = document.createElement('a');
+    a.href         = url;
+    a.download     = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    closeExportModal();
+  }
+</script>
+</body>
+</html>
