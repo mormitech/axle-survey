@@ -544,6 +544,47 @@
     }
     .modal-confirm:hover { background: var(--navy-light); }
 
+    /* base64 output box */
+    .b64-label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    .b64-box {
+      position: relative;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      padding: 0.65rem 2.75rem 0.65rem 0.85rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.66rem;
+      word-break: break-all;
+      color: var(--muted);
+      max-height: 120px;
+      overflow-y: auto;
+      margin-bottom: 0.75rem;
+      line-height: 1.55;
+    }
+    .b64-copy-btn {
+      position: absolute;
+      top: 0.4rem;
+      right: 0.4rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      color: var(--muted);
+      padding: 0.28rem;
+      border-radius: 5px;
+      transition: color 0.15s, background 0.15s, border-color 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 0;
+      flex-shrink: 0;
+    }
+    .b64-copy-btn:hover { color: var(--navy); border-color: var(--navy); background: var(--blue-pale); }
+    .b64-copy-btn.copied { color: var(--green); border-color: var(--green); background: #f0fdf4; }
+
     /* ── Footer ── */
     footer {
       text-align: center;
@@ -599,14 +640,32 @@
   <!-- Export name modal -->
   <div class="modal-overlay" id="export-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal-box">
-      <h3 id="modal-title">Export your answers</h3>
-      <p>Your answers will be saved as a JSON file so others can load and compare them. Please enter your name as it should appear in the export.</p>
+      <h3 id="modal-title">Share your answers</h3>
+      <p id="modal-desc">Enter your name to generate a shareable code for your answers that others can load and compare.</p>
       <input class="modal-input" id="export-name-input" type="text" placeholder="Your name" autocomplete="name"
              onkeydown="if(event.key==='Enter')confirmExport();if(event.key==='Escape')closeExportModal()" />
-      <div class="modal-input-err" id="export-name-err">Please enter your name before exporting.</div>
-      <div class="modal-actions">
+      <div class="modal-input-err" id="export-name-err">Please enter your name before generating.</div>
+      <div class="modal-actions" id="modal-primary-actions">
         <button class="modal-cancel" onclick="closeExportModal()">Cancel</button>
-        <button class="modal-confirm" onclick="confirmExport()">Download JSON</button>
+        <button class="modal-confirm" onclick="confirmExport()">Generate Code</button>
+      </div>
+      <div id="modal-b64-result" style="display:none;">
+        <div class="b64-label">Copy the code below and share it with your team:</div>
+        <div class="b64-box">
+          <span id="b64-text"></span>
+          <button class="b64-copy-btn" id="b64-copy-btn" onclick="copyBase64()" title="Copy to clipboard" aria-label="Copy to clipboard">
+            <svg id="b64-icon-copy" width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="4.5" y="1.5" width="9" height="11" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+              <rect x="1.5" y="4.5" width="9" height="11" rx="1.5" fill="var(--card)" stroke="currentColor" stroke-width="1.3"/>
+            </svg>
+            <svg id="b64-icon-check" width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:none;">
+              <path d="M3 7.5l3 3 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-actions">
+          <button class="modal-cancel" onclick="closeExportModal()">Close</button>
+        </div>
       </div>
     </div>
   </div>
@@ -919,9 +978,11 @@
         <button class="reset-btn" onclick="resetForm()">&#8635;&nbsp; Reset &amp; Start Over</button>
         <button class="export-btn" id="export-btn" onclick="openExportModal()">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M7 1v7M4 6l3 3 3-3M2 10v1.5A.5.5 0 002.5 12h9a.5.5 0 00.5-.5V10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="3" y="1" width="8" height="10" rx="1.2" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M1 4.5h3.5M1 7h5M1 9.5h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            <path d="M9.5 7v4.5M8 10l1.5 1.5L11 10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          Export Answers to JSON
+          Share Answers
         </button>
       </div>
     `;
@@ -971,6 +1032,11 @@
       "respondent": "Peter",
       "exportedAt": "2026-05-08T07:50:20.155Z",
       "answers": { "q1": 1, "q2": 0, "q3": 2, "q4": 1, "q5": 2, "q6": -1, "q7": 0, "q8": 1, "q9": -1, "q10": 0 }
+    },
+    {
+      "respondent": "Dani",
+      "exportedAt": "2026-05-08T08:16:36.242Z",
+      "answers": { "q1": 1, "q2": 2, "q3": 1, "q4": 1, "q5": 1, "q6": 1, "q7": 2, "q8": 2, "q9": 0, "q10": 1 }
     }
   ];
 
@@ -1014,8 +1080,14 @@
   ───────────────────────────────────────────── */
 
   function openExportModal() {
+    // Reset to initial state
     document.getElementById('export-name-input').value = '';
+    document.getElementById('export-name-input').style.display = '';
     document.getElementById('export-name-err').style.display = 'none';
+    document.getElementById('modal-primary-actions').style.display = '';
+    document.getElementById('modal-b64-result').style.display = 'none';
+    document.getElementById('modal-desc').textContent =
+      'Enter your name to generate a shareable code for your answers that others can load and compare.';
     document.getElementById('export-modal').classList.add('open');
     setTimeout(() => document.getElementById('export-name-input').focus(), 60);
   }
@@ -1054,19 +1126,40 @@
       answers
     };
 
-    const slug     = name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
-    const filename = `axle_architecture_survey_${slug}_export.json`;
-    const blob     = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    const url      = URL.createObjectURL(blob);
-    const a        = document.createElement('a');
-    a.href         = url;
-    a.download     = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const json   = JSON.stringify(payload, null, 2);
+    const base64 = btoa(unescape(encodeURIComponent(json)));
 
-    closeExportModal();
+    document.getElementById('b64-text').textContent = base64;
+    // Reset copy button state
+    document.getElementById('b64-icon-copy').style.display = '';
+    document.getElementById('b64-icon-check').style.display = 'none';
+    document.getElementById('b64-copy-btn').classList.remove('copied');
+    document.getElementById('b64-copy-btn').title = 'Copy to clipboard';
+
+    // Switch modal to result view
+    nameInput.style.display = 'none';
+    document.getElementById('modal-primary-actions').style.display = 'none';
+    document.getElementById('modal-desc').textContent = 'Your answers have been encoded. Share this code with your team.';
+    document.getElementById('modal-b64-result').style.display = 'block';
+  }
+
+  function copyBase64() {
+    const text = document.getElementById('b64-text').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn      = document.getElementById('b64-copy-btn');
+      const iconCopy = document.getElementById('b64-icon-copy');
+      const iconCheck = document.getElementById('b64-icon-check');
+      btn.classList.add('copied');
+      btn.title        = 'Copied!';
+      iconCopy.style.display  = 'none';
+      iconCheck.style.display = '';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.title        = 'Copy to clipboard';
+        iconCopy.style.display  = '';
+        iconCheck.style.display = 'none';
+      }, 2000);
+    });
   }
 </script>
 </body>
